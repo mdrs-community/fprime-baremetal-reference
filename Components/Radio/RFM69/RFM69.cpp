@@ -116,7 +116,7 @@ void RFM69 ::run_handler(const NATIVE_INT_TYPE portNum, NATIVE_UINT_TYPE context
         }
 
         rfm69.setFrequency(RFM69_FREQ);
-        rfm69.setModemConfig(RH_RF69::ModemConfigChoice::GFSK_Rb250Fd250);
+        rfm69.setModemConfig(RH_RF69::ModemConfigChoice::GFSK_Rb125Fd125); ///< GFSK, Whitening, Rb = 125kbs,  Fd = 125kHz
         rfm69.setTxPower(14, true);
 
         Fw::Success radioSuccess = Fw::Success::SUCCESS;
