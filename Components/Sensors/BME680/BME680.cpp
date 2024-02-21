@@ -26,4 +26,32 @@ namespace Sensors {
 
   }
 
+  // ----------------------------------------------------------------------
+  // Handler implementations for user-defined typed input ports
+  // ----------------------------------------------------------------------
+
+  void BME680 ::
+    run_handler(
+        NATIVE_INT_TYPE portNum,
+        NATIVE_UINT_TYPE context
+    )
+  {
+    // TODO
+  }
+
+  // ----------------------------------------------------------------------
+  // Handler implementations for commands
+  // ----------------------------------------------------------------------
+
+  void BME680 ::
+    PowerSwitch_cmdHandler(
+        FwOpcodeType opCode,
+        U32 cmdSeq,
+        Fw::On powerState
+    )
+  {
+    // TODO
+    this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
+  }
+
 }

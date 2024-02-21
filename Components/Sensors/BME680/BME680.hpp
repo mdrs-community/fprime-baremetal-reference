@@ -29,6 +29,35 @@ namespace Sensors {
       //! Destroy BME680 object
       ~BME680();
 
+    PRIVATE:
+
+      // ----------------------------------------------------------------------
+      // Handler implementations for user-defined typed input ports
+      // ----------------------------------------------------------------------
+
+      //! Handler implementation for run
+      //!
+      //! Port receiving calls from the rate group
+      void run_handler(
+          NATIVE_INT_TYPE portNum, //!< The port number
+          NATIVE_UINT_TYPE context //!< The call order
+      );
+
+    PRIVATE:
+
+      // ----------------------------------------------------------------------
+      // Handler implementations for commands
+      // ----------------------------------------------------------------------
+
+      //! Handler implementation for command PowerSwitch
+      //!
+      //! Command to turn on the device
+      void PowerSwitch_cmdHandler(
+          FwOpcodeType opCode, //!< The opcode
+          U32 cmdSeq, //!< The command sequence number
+          Fw::On powerState
+      );
+
   };
 
 }
