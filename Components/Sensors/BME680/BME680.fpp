@@ -1,4 +1,8 @@
 module Sensors {
+
+    @ 3-tuple type used for telemetry
+    array envTlm = [4] F32
+
     @ Passive component for Adafruit BME680 Breakout
     passive component BME680 {
 
@@ -6,17 +10,26 @@ module Sensors {
         #### Uncomment the following examples to start customizing your component ####
         ##############################################################################
 
-        # @ Example async command
-        # async command COMMAND_NAME(param_name: U32)
+        # ----------------------------------------------------------------------
+        # General ports
+        # ----------------------------------------------------------------------
 
-        # @ Example telemetry counter
-        # telemetry ExampleCounter: U64
+        @ Port that reads data from device
+        output port read: Drv.I2c
 
-        # @ Example event
-        # event ExampleStateEvent(example_state: Fw.On) severity activity high id 0 format "State set to {}"
+        @ Port that writes data to device
+        output port write: Drv.I2c
 
-        # @ Example port: receiving calls from the rate group
-        # sync input port run: Svc.Sched
+        # ----------------------------------------------------------------------
+        # Special ports
+        # ----------------------------------------------------------------------
+
+        @ Port receiving calls from the rate group
+        sync input port run: Svc.Sched
+
+        # ----------------------------------------------------------------------
+        # Parameters
+        # ----------------------------------------------------------------------
 
         # @ Example parameter
         # param PARAMETER_NAME: U32
@@ -48,8 +61,63 @@ module Sensors {
         @ Port to return the value of a parameter
         param get port prmGetOut
 
-        @Port to set the value of a parameter
+        @ Port to set the value of a parameter
         param set port prmSetOut
+
+        # ----------------------------------------------------------------------
+        # Events
+        # ----------------------------------------------------------------------
+
+        @ Error occurred when requesting telemetry
+        event TelemetryError(
+            status: Drv.I2cStatus @< the status value returned
+        ) \
+        severity warning high \
+        format "Telemetry request failed with status {}"
+
+        @ Configuration failed
+        event SetUpConfigError(
+            writeStatus: Drv.I2cStatus @< the status of writing data to device
+        ) \
+        severity warning high \
+        format "Setup Error: Write status failed with code {}"
+
+        @ Device was not taken out of sleep mode
+        event PowerModeError(
+            writeStatus: Drv.I2cStatus @< the status of writing data to device
+        ) \
+        severity warning high \
+        format "Setup Error: Power mode failed to set up with write code {}"
+
+        @ Report power state
+        event PowerStatus(
+            powerStatus: Fw.On @< power state of device
+        ) \
+        severity activity high \
+        format "The device has been turned {}"
+
+        # ----------------------------------------------------------------------
+        # Commands
+        # ----------------------------------------------------------------------
+
+        @ Command to turn on the device
+        guarded command PowerSwitch(powerState: Fw.On)
+
+        # ----------------------------------------------------------------------
+        # Telemetry
+        # ----------------------------------------------------------------------
+
+        @ temperature from temperature sensor
+        telemetry temperature: envTlm id 0 update always format "{} C"
+
+        @ pressure from barometer
+        telemetry pressure: envTlm id 1 update always format "{} hPa"
+
+        @ humidity from humidity senor
+        telemetry humidity: envTlm id 2 update always format "{} %"
+
+        @ voc from gas senor
+        telemetry voc: envTlm id 3 update always format "{} omh"
 
     }
 }
