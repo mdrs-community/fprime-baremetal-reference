@@ -28,7 +28,7 @@ module BaremetalReference {
     instance gpioDriver
     instance gpioRadioReset
     instance i2cDriver
-    instance imu
+    #instance imu
     instance rateDriver
     instance rateGroup1
     instance rateGroup2
@@ -70,9 +70,9 @@ module BaremetalReference {
       rateGroupDriver.CycleOut[Ports_RateGroups.rateGroup2] -> rateGroup2.CycleIn
       rateGroup2.RateGroupMemberOut[0] -> systemResources.run
       rateGroup2.RateGroupMemberOut[1] -> tlmSend.Run
-      rateGroup2.RateGroupMemberOut[2] -> imu.run
+      #rateGroup2.RateGroupMemberOut[2] -> imu.run
+      rateGroup2.RateGroupMemberOut[2] -> env.run
       rateGroup2.RateGroupMemberOut[3] -> bufferManager.schedIn
-      rateGroup2.RateGroupMemberOut[4] -> env.run
     }
 
     connections FaultProtection {
@@ -107,8 +107,8 @@ module BaremetalReference {
     }
 
     connections I2c {
-      imu.read -> i2cDriver.read
-      imu.write -> i2cDriver.write
+      #imu.read -> i2cDriver.read
+      #imu.write -> i2cDriver.write
       env.read -> i2cDriver.read
       env.write -> i2cDriver.write
     }

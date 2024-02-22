@@ -108,7 +108,10 @@ void setupTopology(const TopologyState& state) {
     i2cDriver.open(&Wire);
 
     // Configure IMU
-    imu.setup(Sensors::IMU_MPU9250::I2cDevAddr::AD0_0);
+    //imu.setup(Sensors::IMU_MPU9250::I2cDevAddr::AD0_0);
+
+    // Configure env
+    env.setup(Sensors::BME680::I2cDevAddr::AD0_0);
 
     // Start hardware rate driver
     rateDriver.start();

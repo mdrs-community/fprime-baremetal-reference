@@ -65,8 +65,8 @@
     </packet>
 
     <packet name="SensorChannels" id="8" level="1">
-        <channel name="imu.accelerometer"/>
-        <channel name="imu.gyroscope"/>
+<!--         <channel name="imu.accelerometer"/>
+        <channel name="imu.gyroscope"/> -->
         <channel name="env.temperature"/>
         <channel name="env.pressure"/>
         <channel name="env.humidity"/>
