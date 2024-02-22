@@ -77,4 +77,6 @@ module BaremetalReference {
 
   instance imu: Sensors.IMU_MPU9250 base id 0x10200
 
+  instance env: Sensors.BME680 base id 0x10300
+
 }

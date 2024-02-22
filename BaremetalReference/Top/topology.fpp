@@ -20,6 +20,7 @@ module BaremetalReference {
     instance cmdDisp
     instance commQueue
     instance deframer
+    instance env
     instance eventLogger
     instance fatalAdapter
     instance fatalHandler
@@ -71,6 +72,7 @@ module BaremetalReference {
       rateGroup2.RateGroupMemberOut[1] -> tlmSend.Run
       rateGroup2.RateGroupMemberOut[2] -> imu.run
       rateGroup2.RateGroupMemberOut[3] -> bufferManager.schedIn
+      rateGroup2.RateGroupMemberOut[4] -> env.run
     }
 
     connections FaultProtection {
@@ -107,6 +109,8 @@ module BaremetalReference {
     connections I2c {
       imu.read -> i2cDriver.read
       imu.write -> i2cDriver.write
+      env.read -> i2cDriver.read
+      env.write -> i2cDriver.write
     }
 
     connections BaremetalReference {
