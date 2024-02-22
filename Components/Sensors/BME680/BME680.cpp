@@ -15,7 +15,9 @@ namespace Sensors {
 
   BME680 ::
     BME680(const char* const compName) :
-      BME680ComponentBase(compName)
+      BME680ComponentBase(compName),
+      m_i2cDevAddress(I2cDevAddr::AD0_0),
+      m_power(Fw::On::ON)
   {
 
   }
@@ -24,6 +26,128 @@ namespace Sensors {
     ~BME680()
   {
 
+  }
+
+  void BME680 ::
+    setup(I2cDevAddr::T devAddress) 
+  {
+    m_i2cDevAddress = devAddress;
+  }
+
+
+  Drv::I2cStatus BME680 ::
+    setupReadRegister(U8 reg)
+  {
+    Fw::Buffer buffer(&reg, sizeof reg);
+    return this->write_out(0, m_i2cDevAddress, buffer);
+  }
+
+  Drv::I2cStatus BME680 ::
+    readRegisterBlock(U8 startRegister, Fw::Buffer& buffer)
+  {
+      Drv::I2cStatus status;
+      status = this->setupReadRegister(startRegister);
+      if (status == Drv::I2cStatus::I2C_OK) {
+          status = this->read_out(0, m_i2cDevAddress, buffer);
+      }
+      return status;
+  }
+
+  Sensors::envTlm BME680 ::
+    deserializeVector(Fw::Buffer& buffer, F32 scaleFactor)
+  {
+    Sensors::envTlm vector;
+    I16 value;
+    FW_ASSERT(buffer.getSize() >= 6, buffer.getSize());
+    FW_ASSERT(buffer.getData() != nullptr);
+    // Data is big-endian as is fprime internal storage so we can use the built-in buffer deserialization
+    Fw::SerializeBufferBase& deserializeHelper = buffer.getSerializeRepr();
+    deserializeHelper.setBuffLen(buffer.getSize()); // Inform the helper what size we have available
+    FW_ASSERT(deserializeHelper.deserialize(value) == Fw::FW_SERIALIZE_OK);
+    vector[0] = static_cast<F32>(value) / scaleFactor;
+
+    FW_ASSERT(deserializeHelper.deserialize(value) == Fw::FW_SERIALIZE_OK);
+    vector[1] = static_cast<F32>(value) / scaleFactor;
+
+    FW_ASSERT(deserializeHelper.deserialize(value) == Fw::FW_SERIALIZE_OK);
+    vector[2] = static_cast<F32>(value) / scaleFactor;
+    return vector;
+
+    FW_ASSERT(deserializeHelper.deserialize(value) == Fw::FW_SERIALIZE_OK);
+    vector[3] = static_cast<F32>(value) / scaleFactor;
+    return vector;
+  }
+
+  void BME680 ::
+    updateTemp()
+  {
+    U8 data[ENV_MAX_DATA_SIZE_BYTES];
+    Fw::Buffer buffer(data, sizeof data);
+
+    // Read a block of registers from the ENV at the temperature sensor's address
+    Drv::I2cStatus status = this->readRegisterBlock(_BME680_REG_MEAS_STATUS, buffer);
+
+    // Check a successful read of 6 bytes before processing data
+    if ((status == Drv::I2cStatus::I2C_OK) && (buffer.getSize() == 6) && (buffer.getData() != nullptr)) {
+        Sensors::envTlm vector = deserializeVector(buffer, tempScaleFactor);
+        this->tlmWrite_temperature(vector);
+    } else {
+        this->log_WARNING_HI_TelemetryError(status);
+    }
+  }
+
+  void BME680 ::
+    updatePres()
+  {
+    U8 data[ENV_MAX_DATA_SIZE_BYTES];
+    Fw::Buffer buffer(data, sizeof data);
+
+    // Read a block of registers from the ENV at the barometer's address
+    Drv::I2cStatus status = this->readRegisterBlock(_BME680_REG_MEAS_STATUS, buffer);
+
+    // Check a successful read of 6 bytes before processing data
+    if ((status == Drv::I2cStatus::I2C_OK) && (buffer.getSize() == 6) && (buffer.getData() != nullptr)) {
+        Sensors::envTlm vector = deserializeVector(buffer, presScaleFactor);
+        this->tlmWrite_pressure(vector);
+    } else {
+        this->log_WARNING_HI_TelemetryError(status);
+    }
+  }
+
+  void BME680 ::
+    updateHum()
+  {
+    U8 data[ENV_MAX_DATA_SIZE_BYTES];
+    Fw::Buffer buffer(data, sizeof data);
+
+    // Read a block of registers from the ENV at the humidity sensor's address
+    Drv::I2cStatus status = this->readRegisterBlock(_BME680_REG_CTRL_HUM, buffer);
+
+    // Check a successful read of 6 bytes before processing data
+    if ((status == Drv::I2cStatus::I2C_OK) && (buffer.getSize() == 6) && (buffer.getData() != nullptr)) {
+        Sensors::envTlm vector = deserializeVector(buffer, humScaleFactor);
+        this->tlmWrite_humidity(vector);
+    } else {
+        this->log_WARNING_HI_TelemetryError(status);
+    }
+  }
+
+  void BME680 ::
+    updateVOC()
+  {
+    U8 data[ENV_MAX_DATA_SIZE_BYTES];
+    Fw::Buffer buffer(data, sizeof data);
+
+    // Read a block of registers from the ENV at the VOC sensor's address
+    Drv::I2cStatus status = this->readRegisterBlock(_BME680_REG_CTRL_GAS, buffer);
+
+    // Check a successful read of 6 bytes before processing data
+    if ((status == Drv::I2cStatus::I2C_OK) && (buffer.getSize() == 6) && (buffer.getData() != nullptr)) {
+        Sensors::envTlm vector = deserializeVector(buffer, vocScaleFactor);
+        this->tlmWrite_voc(vector);
+    } else {
+        this->log_WARNING_HI_TelemetryError(status);
+    }
   }
 
   // ----------------------------------------------------------------------
@@ -36,7 +160,13 @@ namespace Sensors {
         NATIVE_UINT_TYPE context
     )
   {
-    // TODO
+    if(m_power == Fw::On::ON)
+    {
+      updateTemp();
+      updatePres();
+      updateHum();
+      updateVOC();
+    }
   }
 
   // ----------------------------------------------------------------------

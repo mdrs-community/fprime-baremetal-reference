@@ -17,6 +17,24 @@ namespace Sensors {
 
     public:
 
+      //! The I2C device addresses
+      struct I2cDevAddr {
+        enum T {
+          //! The I2C device address with AD0 set to zero
+          AD0_0 = 0x68,
+          //! The I2C device address with AD0 set to one
+          AD0_1 = 0x69
+        };
+      };
+      static const U16 ENV_MAX_DATA_SIZE_BYTES = 6;
+      static const U8 _BME680_REG_MEAS_STATUS = 0x1D; // https://github.com/adafruit/Adafruit_CircuitPython_BME680/blob/3.7.4/adafruit_bme680.py#L99
+      static const U8 _BME680_REG_CTRL_HUM = 0x72; // https://github.com/adafruit/Adafruit_CircuitPython_BME680/blob/3.7.4/adafruit_bme680.py#L94
+      static const U8 _BME680_REG_CTRL_GAS = 0x71; // https://github.com/adafruit/Adafruit_CircuitPython_BME680/blob/3.7.4/adafruit_bme680.py#L93
+      static constexpr F32 tempScaleFactor = 1.0f;
+      static constexpr F32 presScaleFactor = 1.0f;
+      static constexpr F32 humScaleFactor = 1.0f;
+      static constexpr F32 vocScaleFactor = 1.0f;
+
       // ----------------------------------------------------------------------
       // Component construction and destruction
       // ----------------------------------------------------------------------
@@ -28,6 +46,8 @@ namespace Sensors {
 
       //! Destroy BME680 object
       ~BME680();
+
+      void setup(I2cDevAddr::T devAddress);
 
     PRIVATE:
 
@@ -58,6 +78,64 @@ namespace Sensors {
           Fw::On powerState
       );
 
+      // ----------------------------------------------------------------------
+      // Helper Functions
+      // ----------------------------------------------------------------------
+
+      /**
+       * \brief sets up the IMU to know what register the next read should be from
+       *
+       * The MPU-6050 requires a write call with a register's address before a read will function correctly. This helper
+       * sets up that read address by writing it to the IMU via the I2C write port.
+       *
+       * \param reg: IMU internal address to the first register to be read
+       * \return: I2C from the write call
+       */
+      Drv::I2cStatus setupReadRegister(U8 reg);
+
+      /**
+       * \brief reads a block of registers from the IMU
+       *
+       * This function starts by writing the startRegister to the IMU by passing it to `setupReadRegister`. It then calls
+       * the read port of the I2C bus to read data from the IMU. It will read `buffer.getSize()` bytes from the I2C device
+       * and as such the caller must set this up.
+       *
+       * \param startRegister: register address to start reading from
+       * \param buffer: buffer to read into. Determines size of read.
+       * \return: I2C status of transactions
+       */
+      Drv::I2cStatus readRegisterBlock(U8 startRegister, Fw::Buffer& buffer);
+
+      /**
+       * \brief unpacks a buffer into a vector with scaled elements
+       *
+       * This will unpack data from buffer into a Sensors::imuTlm type by unpacking 3x I16 values (in big endian format) and
+       * scales each by dividing by the scaleFactor provided.
+       *
+       * \param buffer: buffer wrapping data, must contain at least 6 byes (3x I16)
+       * \param scaleFactor: scale factor to divide each element by
+       * \return initalized vector
+       */
+      envTlm deserializeVector(Fw::Buffer& buffer, F32 scaleFactor);
+
+      //! Read, telemetry, and update local copy of temperature data
+      //!
+      void updateTemp();
+
+      //! Read, telemetry, and update local copy of pressure data
+      //!
+      void updatePres();
+
+      //! Read, telemetry, and update local copy of humidity data
+      //!
+      void updateHum();
+
+      //! Read, telemetry, and update local copy of VOC data
+      //!
+      void updateVOC();
+
+      I2cDevAddr::T m_i2cDevAddress; //!< Stored device address
+      Fw::On m_power; //!< Power state of device
   };
 
 }
