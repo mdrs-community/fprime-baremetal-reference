@@ -21,9 +21,9 @@ namespace Sensors {
       struct I2cDevAddr {
         enum T {
           //! The I2C device address with AD0 set to zero
-          AD0_0 = 0x68,
+          AD0_0 = 0x77, // as per https://learn.adafruit.com/adafruit-bme680-humidity-temperature-barometic-pressure-voc-gas/arduino-wiring-test
           //! The I2C device address with AD0 set to one
-          AD0_1 = 0x69
+          AD0_1 = 0x76 // as per https://learn.adafruit.com/adafruit-bme680-humidity-temperature-barometic-pressure-voc-gas/arduino-wiring-test
         };
       };
       static const U16 ENV_MAX_DATA_SIZE_BYTES = 6;
